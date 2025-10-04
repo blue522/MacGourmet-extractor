@@ -1,0 +1,61 @@
+# **MacGourmet Recipe Browser Web App**
+
+This project successfully extracts recipe data from a legacy MacGourmet SQLite database (.mgdb), processes and organizes it within a Google Sheet, and deploys a secure, fast, and functional web application using Google Apps Script.
+
+The application allows users to view all recipes from the converted data, search by recipe name or source, and view detailed instructions and ingredients.
+
+## **1\. Project Journey Summary**
+
+This project involved a four-stage process to transform static database files into a dynamic, live web application:
+
+1. **Data Preparation (Outside Apps Script):** The raw MacGourmet .mgdb SQLite file was analyzed. A SQL query was developed to join the necessary tables (recipe, ingredient, etc.), and the resulting flattened data was successfully imported into a **Google Sheet**.  
+2. **API Backend Creation (webapp\_data\_api.gs):** A dedicated Apps Script file was written and deployed as a **JSON API**. This script's sole purpose is to read the raw data from the Google Sheet and return it as structured JSON data when requested by the frontend.  
+3. **Frontend Development (Index.html):** A responsive, single-page web application (HTML/Tailwind CSS/JavaScript) was built to consume the JSON data and render the UI (sidebar list, search, main viewer).  
+4. **Frontend Hosting (Code.gs):** A final, separate Apps Script deployment was created using the HTML Service. This deployment uses Code.gs to host the Index.html file, making the entire application accessible via a single URL.
+
+## **2\. File Structure and Roles**
+
+Your Google Apps Script project now contains three essential files, each with a distinct and critical role in the application architecture:
+
+### **📄 webapp\_data\_api.gs (The Data API)**
+
+**Role:** **Backend Data Provider.** This script runs the doGet() function to handle incoming fetch requests from the frontend. It reads the raw recipe data from a specified Google Sheet, converts the spreadsheet rows into a JSON array of JavaScript objects, and securely returns this array to the frontend.
+
+| Key Features | Description |
+| :---- | :---- |
+| **API Endpoint** | Deployed as a Web App to provide a stable URL for data requests. |
+| **Error Handling** | Includes debugging logs (Logger.log) to confirm the correct sheet name and number of rows found. |
+| **Deployment** | Must be deployed with **"Who has access: Anyone"** to allow the public frontend to fetch the data. |
+
+### **📄 Index.html (The Frontend UI)**
+
+**Role:** **The User Interface.** This is the complete client-side application. It is pure HTML, uses Tailwind CSS for styling, and relies on a large block of JavaScript to function.
+
+| Key Features | Description |
+| :---- | :---- |
+| **Data Fetching** | The internal JavaScript connects to the API\_URL (the webapp\_data\_api.gs deployment). |
+| **Filtering** | Implements the **search functionality** to filter recipes by name or source. |
+| **Interaction Fix** | Contains the final, stable fix for the click event handler (item.addEventListener('click', () \=\> displayRecipe(recipe.recipe\_id));) which ensures recipes correctly open in the viewer. |
+| **Responsiveness** | Uses Tailwind classes to ensure a clear layout on both mobile and desktop devices. |
+
+### **📄 Code.gs (The HTML Service Handler)**
+
+**Role:** **Frontend Host.** This file is necessary to host the Index.html file. Its simple doGet() function tells the Google Apps Script environment: "When a user visits the primary application URL, serve the contents of the Index.html file."
+
+| Key Features | Description |
+| :---- | :---- |
+| **Function** | doGet() function uses HtmlService.createHtmlOutputFromFile('Index'). |
+| **Deployment** | This is the file used to create the **final public URL** for the recipe browser application. |
+
+## **3\. Final Deployment and Access**
+
+To access the live application:
+
+1. You have successfully deployed the **Data API** (webapp\_data\_api.gs) and noted its URL.  
+2. You then deployed the **Frontend Host** (Code.gs serving Index.html) and received a **second, public URL**.
+
+**The second public URL is the live link to your application.** When you visit that URL, the page loads, and its JavaScript immediately calls the first API URL to retrieve your 247 recipes.
+
+### **Final Bug Acknowledgment**
+
+The final debugging steps confirmed that the issue with recipe clicking was not in the HTML structure but in the JavaScript event handling within the specific Apps Script execution environment. The fix was implementing a **robust closure-based event listener** in renderRecipeList to reliably pass the recipe ID to the displayRecipe function.
